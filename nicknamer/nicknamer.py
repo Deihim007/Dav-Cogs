@@ -51,6 +51,7 @@ class NickNamer(commands.Cog):
         standard = {
             "modlog": True,
             "nick": "CHANGEME",
+            "snick": "TAG",
             "dm": False,
             "frozen": [],
             "active": [],
@@ -169,6 +170,19 @@ class NickNamer(commands.Cog):
                     )
                 except:
                     pass
+        except discord.errors.Forbidden:
+            await ctx.send(
+                _("Missing permissions.")
+            )  # can remove this as the check is made on invoke with the decorator
+
+    @checks.mod()
+    @commands.command()
+    @checks.bot_has_permissions(manage_nicknames=True)
+    async def snick(self, ctx, user: discord.Member):
+        """Change nickname to staff mode."""
+        try:
+            await user.edit(nick=user.name + " " +await self.config.guild(ctx.guild).snick())
+            await ctx.tick()
         except discord.errors.Forbidden:
             await ctx.send(
                 _("Missing permissions.")
@@ -333,6 +347,13 @@ class NickNamer(commands.Cog):
     async def nickset(self, ctx):
         """Nicknamer settings"""
         pass
+
+    @nickset.command()
+    async def sname(self, ctx, *, name: str):
+        """Set the default name + tag that will be applied when using ``[p]snick``"""
+        if len(name) < 33 and len(name) > 1:
+            await self.config.guild(ctx.guild).snick.set(name)
+            await ctx.send(_("Standard Staff Nickname set to ``{name}``.").format(name=name))
 
     @nickset.command()
     async def name(self, ctx, *, name: str):
